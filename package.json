@@ -1,0 +1,14 @@
+{
+  "name": "mobileplus-shop",
+  "version": "1.0.0",
+  "description": "MobilePlus onlayn do'koni: katalog, PC konfigurator, kartaga to'lov va admin panel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MobilePlus — kompyuter texnikasi va aksessuarlar</title>
+  <meta name="description" content="Klaviatura, sichqoncha, quloqchin, monitor, PC yig'ish — MobilePlus onlayn do'koni. Optom va chakana.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23e3262f'/><text x='16' y='23' font-size='18' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>M+</text></svg>">
+</head>
+<body>
+  <header class="header">
+    <div class="topbar">
+      <div class="container topbar-in">
+        <span id="tb-address">📍 Izza ShowRoom</span>
+        <span id="tb-hours" class="hide-sm"></span>
+        <a id="tb-phone" href="#">📞</a>
+      </div>
+    </div>
+    <div class="container header-in">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Menyu">☰</button>
+      <a href="#/" class="logo">
+        <span class="logo-mark">M<sup>+</sup></span>
+        <span class="logo-text">MOBILE <b>PLUS</b></span>
+      </a>
+      <form class="search" id="searchForm" role="search">
+        <input id="searchInput" type="search" placeholder="Mahsulot qidirish…" autocomplete="off">
+        <button aria-label="Qidirish">🔍</button>
+      </form>
+      <nav class="nav" id="nav">
+        <a href="#/catalog">Katalog</a>
+        <a href="#/build">PC yig'ish</a>
+        <a href="#/track">Buyurtma holati</a>
+      </nav>
+      <a href="#/cart" class="cart-btn" aria-label="Savat">🛒<span id="cartCount" class="cart-count">0</span></a>
+    </div>
+  </header>
+
+  <main id="app" class="container main"><div class="loader">Yuklanmoqda…</div></main>
+
+  <footer class="footer">
+    <div class="container footer-in">
+      <div>
+        <a href="#/" class="logo"><span class="logo-mark">M<sup>+</sup></span><span class="logo-text">MOBILE <b>PLUS</b></span></a>
+        <p class="muted" id="ft-tagline"></p>
+      </div>
+      <div>
+        <h4>Xaridorlarga</h4>
+        <a href="#/catalog">Katalog</a>
+        <a href="#/build">PC yig'ish</a>
+        <a href="#/track">Buyurtma holati</a>
+        <a href="#/cart">Savat</a>
+      </div>
+      <div>
+        <h4>Aloqa</h4>
+        <a id="ft-phone" href="#"></a>
+        <span id="ft-address"></span>
+        <span id="ft-hours"></span>
+      </div>
+      <div>
+        <h4>Ijtimoiy tarmoqlar</h4>
+        <a id="ft-tg" target="_blank" rel="noopener">✈️ Telegram kanal</a>
+        <a id="ft-ig" target="_blank" rel="noopener">📸 Instagram</a>
+      </div>
+    </div>
+    <div class="container copy muted" id="ft-copy"></div>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
