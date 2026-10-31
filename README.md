@@ -35,6 +35,8 @@ Boshqa parol bilan boshlash: `ADMIN_PASSWORD=MeningParolim node server.js` (faqa
 2. Demo mahsulotlarni o'z tovarlaringiz, narxlar va rasmlar bilan almashtiring.
 3. Barcha ma'lumotlar `data/db.json` faylida, rasmlar `uploads/` papkasida — ularni muntazam zaxiralang.
 
-## Internetga joylash
-Node.js ishlaydigan har qanday VPS (masalan, Ubuntu server) yoki Render / Railway kabi xizmatlar mos keladi.
-`data/` va `uploads/` papkalari doimiy diskda saqlanishi shart. Domen ulab, HTTPS (masalan Nginx + Let's Encrypt) yoqing.
+## Internetga joylash (Render)
+Repozitoriyda `render.yaml` bor: Render → **New → Blueprint** → shu repozitoriy → `ADMIN_PASSWORD` ni kiriting → **Apply**.
+Server, 1 GB doimiy disk (`/var/data`) va `STORAGE_DIR` o'zi sozlanadi. Kodni GitHub'ga yuklash bilan sayt avtomatik yangilanadi.
+
+Boshqa hostingda: `STORAGE_DIR` ni doimiy diskdagi papkaga yo'naltiring — `data/` va `uploads/` o'sha yerda saqlanadi.

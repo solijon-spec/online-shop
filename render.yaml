@@ -1,0 +1,23 @@
+# Render Blueprint: Render → New → Blueprint → shu repozitoriyni tanlang.
+services:
+  - type: web
+    name: mobileplus-shop
+    runtime: node
+    plan: starter
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/shop
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Buyurtmalar, mahsulotlar va rasmlar shu doimiy diskda saqlanadi
+      - key: STORAGE_DIR
+        value: /var/data
+      # Admin parolini Render o'rnatish paytida o'zingiz kiritasiz
+      - key: ADMIN_PASSWORD
+        sync: false
+    disk:
+      name: shop-data
+      mountPath: /var/data
+      sizeGB: 1
