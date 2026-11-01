@@ -33,7 +33,7 @@ function updateCartBadge() {
   el.textContent = n;
   el.classList.toggle('zero', n === 0);
 }
-function addToCart(id, qty = 1, silent) {
+function addToCart(id, qty = 1, silent, fromEl) {
   const p = prodById(id);
   if (!p) return;
   const it = cart.items.find((i) => i.id === id);
@@ -43,6 +43,30 @@ function addToCart(id, qty = 1, silent) {
   if (it) it.qty += qty; else cart.items.push({ id, qty });
   saveCart();
   if (!silent) toast("✓ Savatga qo'shildi");
+  flyToCart(fromEl);
+}
+// Tugmadan savatga uchib boruvchi nur
+function flyToCart(fromEl) {
+  const cartEl = $('.cart-btn');
+  const bump = () => { cartEl.classList.remove('bump'); void cartEl.offsetWidth; cartEl.classList.add('bump'); };
+  if (!fromEl || !fromEl.animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return bump();
+  const a = fromEl.getBoundingClientRect(), b = cartEl.getBoundingClientRect();
+  const sx = a.left + a.width / 2, sy = a.top + a.height / 2, ex = b.left + b.width / 2, ey = b.top + b.height / 2;
+  const dot = document.createElement('div');
+  dot.className = 'fly-dot';
+  document.body.appendChild(dot);
+  dot.animate([
+    { transform: `translate(${sx}px, ${sy}px) scale(1)` },
+    { transform: `translate(${(sx + ex) / 2}px, ${Math.min(sy, ey) - 140}px) scale(1.5)`, offset: 0.45 },
+    { transform: `translate(${ex}px, ${ey}px) scale(.35)`, opacity: 0.7 },
+  ], { duration: 750, easing: 'cubic-bezier(.45,0,.3,1)' }).onfinish = () => { dot.remove(); bump(); };
+}
+// Kategoriya bo'yicha qaysi 3D model ko'rsatiladi
+function model3dKind(p) {
+  const c = catById(p.categoryId);
+  const byId = { keyboard: 'keyboard', mouse: 'mouse', headphones: 'headset', monitor: 'monitor', watch: 'watch', camera: 'camera', charger: 'charger' };
+  const byIcon = { '⌨️': 'keyboard', '🖱️': 'mouse', '🎧': 'headset', '📺': 'monitor', '⌚': 'watch', '📷': 'camera', '🔌': 'charger' };
+  return byId[c?.id] || byIcon[c?.icon] || 'pc';
 }
 function totals(delivery = 'pickup') {
   const lines = cart.items.map((i) => ({ ...i, p: prodById(i.id) })).filter((l) => l.p);
@@ -139,6 +163,7 @@ function renderHome() {
   const featured = S.products.filter((p) => p.featured).slice(0, 10);
   const newest = [...S.products].sort((a, b) => b.createdAt - a.createdAt).filter((p) => !p.featured).slice(0, 10);
   const mainCats = S.categories.filter((c) => !c.pcPart);
+  const brands = [...new Set(S.products.map((p) => p.brand).filter(Boolean))];
   const count = (id) => S.products.filter((p) => p.categoryId === id).length;
   app.innerHTML = `
     <section class="hero">
@@ -150,7 +175,10 @@ function renderHome() {
           <a href="#/build" class="btn btn-lg">🛠️ PC yig'ish</a>
         </div>
       </div>
-      <div class="hero-art">🖥️<small>⌨️🖱️🎧</small></div>
+      <div class="hero-3d" id="hero3d">
+        <div class="hero-art hero-fallback">🖥️<small>⌨️🖱️🎧</small></div>
+        <span class="drag-hint">↔ Aylantiring · 👆 Bosib ko'ring</span>
+      </div>
     </section>
     <div class="perks">
       <div class="perk"><span>✅</span><div><b>Kafolat</b><small>Barcha tovarlarga</small></div></div>
@@ -166,6 +194,10 @@ function renderHome() {
         <a class="cat" href="#/build"><div class="ico">🛠️</div><b>PC qismlari</b><small>O'zingiz yig'ing</small></a>
       </div>
     </section>
+
+    ${brands.length ? `<section class="section marquee" aria-label="Brendlar">
+      <div class="marquee-track">${[0, 1].map((half) => `<div class="marquee-half" ${half ? 'aria-hidden="true"' : ''}>${brands.map((b) => `<a href="#/catalog?q=${encodeURIComponent(b)}" tabindex="${half ? -1 : 0}">${esc(b)}</a><span>✦</span>`).join('')}</div>`).join('')}</div>
+    </section>` : ''}
 
     ${featured.length ? `<section class="section">
       <div class="section-head"><h2>🔥 Ommabop mahsulotlar</h2><a href="#/catalog">Barchasi →</a></div>
@@ -202,6 +234,7 @@ function renderHome() {
         </div>
       </div>
     </section>`;
+  whenMP3D((m) => m.mountHero($('#hero3d')));
 }
 
 function renderCatalog(params) {
@@ -277,8 +310,9 @@ function renderProduct(id) {
     <div class="crumbs"><a href="#/">Bosh sahifa</a> / <a href="#/catalog?cat=${esc(p.categoryId)}">${esc(c?.name)}</a> / ${esc(p.name)}</div>
     <div class="product">
       <div>
-        <div class="gallery-main" id="gMain">${img(p)}</div>
-        ${p.images.length > 1 ? `<div class="thumbs">${p.images.map((u, i) => `<button data-i="${i}" class="${i ? '' : 'active'}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>` : ''}
+        <div class="gallery-main tilt" id="gMain">${img(p)}</div>
+        <div class="thumbs">${p.images.map((u, i) => `<button data-i="${i}" class="${i ? '' : 'active'}"><img src="${esc(u)}" alt=""></button>`).join('')}
+          <button class="thumb-3d ${p.images.length ? '' : 'active'}" data-3d title="3D ko'rinish"><b>3D</b><small>360°</small></button></div>
       </div>
       <div class="p-info">
         <h1>${esc(p.name)}</h1>
@@ -301,17 +335,30 @@ function renderProduct(id) {
     </div>
     ${related.length ? `<section class="section"><div class="section-head"><h2>O'xshash mahsulotlar</h2></div><div class="grid">${related.map(card).join('')}</div></section>` : ''}`;
 
+  const gMain = $('#gMain');
+  const show3d = () => {
+    gMain.innerHTML = `${img(p)}<span class="drag-hint">↔ Aylantiring · bosing</span>`;
+    whenMP3D((m) => {
+      if (!gMain.isConnected || !$('.thumb-3d.active')) return;
+      gMain.innerHTML = '<span class="drag-hint">↔ Aylantiring · bosing</span>';
+      gMain.classList.add('is-3d');
+      if (!m.mountProduct(gMain, model3dKind(p))) { gMain.classList.remove('is-3d'); gMain.innerHTML = img(p); }
+    });
+  };
   $$('.thumbs button').forEach((b) => (b.onclick = () => {
     $$('.thumbs button').forEach((x) => x.classList.remove('active'));
     b.classList.add('active');
-    $('#gMain').innerHTML = img(p, Number(b.dataset.i));
+    gMain.classList.remove('is-3d', 'ready');
+    if ('3d' in b.dataset) return show3d();
+    gMain.innerHTML = img(p, Number(b.dataset.i));
   }));
+  if (!p.images.length) show3d();
   const qty = $('#qty');
   const max = p.stock == null ? 99 : Math.max(1, p.stock);
   const clamp = () => (qty.value = Math.min(max, Math.max(1, Math.round(Number(qty.value)) || 1)));
   $$('[data-q]').forEach((b) => (b.onclick = () => { qty.value = Number(qty.value) + Number(b.dataset.q); clamp(); }));
   qty.onchange = clamp;
-  $('#addBtn').onclick = () => addToCart(p.id, Number(qty.value));
+  $('#addBtn').onclick = () => addToCart(p.id, Number(qty.value), false, $('#addBtn'));
   $('#buyBtn').onclick = () => {
     if (!cart.items.some((i) => i.id === p.id)) addToCart(p.id, Number(qty.value), true);
     location.hash = '#/checkout';
@@ -530,7 +577,7 @@ function renderBuild() {
   app.innerHTML = `
     <h1>🛠️ PC konfigurator</h1>
     <p class="muted" style="margin-top:6px">Har bir bo'limdan kerakli qismni tanlang. Biz yig'ib, sinovdan o'tkazib, Windows o'rnatib beramiz.</p>
-    <div class="layout-2" style="margin-top:18px">
+    <div class="layout-2 build-layout" style="margin-top:18px">
       <div class="panel">
         ${parts.map((c) => {
           const list = S.products.filter((p) => p.categoryId === c.id && (p.stock == null || p.stock > 0));
@@ -545,12 +592,15 @@ function renderBuild() {
       </div>
       <aside class="panel summary">
         <h3>Sizning yig'ma</h3>
+        <div class="build-3d" id="build3d"><span class="drag-hint">Tanlangan qismlar korpusga o'rnatiladi</span></div>
         <div id="bSum"></div>
         <button class="btn btn-primary btn-block btn-lg" id="bAdd" style="margin-top:16px" disabled>🛒 Savatga qo'shish</button>
         <p class="hint" style="margin-bottom:0">Moslik bo'yicha savollar bo'lsa, operatorimiz buyurtmadan keyin maslahat beradi.</p>
       </aside>
     </div>`;
+  let build3d = null;
   const update = () => {
+    if (build3d) build3d.set(new Set(Object.keys(chosen).filter((k) => chosen[k])));
     const ids = Object.values(chosen).filter(Boolean);
     const sub = ids.reduce((s, id) => s + prodById(id).price, 0);
     const fee = ids.length && st.assemblyFee > 0 ? st.assemblyFee : 0;
@@ -573,6 +623,7 @@ function renderBuild() {
     location.hash = '#/cart';
   };
   update();
+  whenMP3D((m) => { build3d = m.mountBuilder($('#build3d')); update(); });
 }
 
 function renderTrack(params) {
@@ -616,6 +667,61 @@ function renderTrack(params) {
   if (number && f.phone.value) f.requestSubmit();
 }
 
+// ---------- 3D va animatsiyalar ----------
+// scene3d.js (Three.js) modul sifatida keyinroq yuklanadi; yuklanmasa — oddiy rasm qoladi
+function whenMP3D(fn) {
+  if (window.MP3D) fn(window.MP3D);
+  else window.addEventListener('mp3d-ready', () => fn(window.MP3D), { once: true });
+}
+
+const revealObserver = 'IntersectionObserver' in window
+  ? new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.isIntersecting) { e.target.classList.add('in'); revealObserver.unobserve(e.target); }
+  }), { rootMargin: '0px 0px -40px 0px' })
+  : null;
+function revealOnScroll() {
+  $$('.hero, .perk, .section-head, .card, .cat, .step, .banner, .panel, .gallery-main').forEach((el) => {
+    const i = [...el.parentElement.children].indexOf(el);
+    el.style.setProperty('--d', Math.min(i, 8) * 0.06 + 's');
+    el.classList.add('reveal');
+    if (revealObserver) revealObserver.observe(el); else el.classList.add('in');
+  });
+}
+
+// Kartalar sichqoncha ortidan 3D egiladi
+let tiltEl = null;
+function resetTilt(el) {
+  el.classList.remove('tilting');
+  el.style.setProperty('--rx', '0deg');
+  el.style.setProperty('--ry', '0deg');
+}
+if (matchMedia('(hover: hover) and (pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  document.addEventListener('pointermove', (e) => {
+    const el = e.target.closest('.card, .tilt:not(.is-3d)');
+    if (tiltEl && tiltEl !== el) resetTilt(tiltEl);
+    tiltEl = el;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    el.classList.add('tilting');
+    el.style.setProperty('--ry', ((x - 0.5) * 12).toFixed(2) + 'deg');
+    el.style.setProperty('--rx', ((0.5 - y) * 12).toFixed(2) + 'deg');
+    el.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
+    el.style.setProperty('--my', (y * 100).toFixed(1) + '%');
+  });
+}
+
+// Kursor ortidan yuruvchi yumshoq qizil nur
+if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  const spot = $('#spot');
+  let raf = 0, sx = 0, sy = 0;
+  document.addEventListener('pointermove', (e) => {
+    sx = e.clientX; sy = e.clientY;
+    if (!raf) raf = requestAnimationFrame(() => { raf = 0; spot.style.setProperty('--x', sx + 'px'); spot.style.setProperty('--y', sy + 'px'); spot.classList.add('on'); });
+  });
+  document.addEventListener('pointerleave', () => spot.classList.remove('on'));
+}
+
 // ---------- Router ----------
 function route() {
   const h = location.hash.slice(1) || '/';
@@ -626,6 +732,10 @@ function route() {
   $$('#nav a').forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#/' + (parts[0] || '')));
   if (parts[0] !== 'catalog') $('#searchInput').value = '';
   window.scrollTo(0, 0);
+  renderPage(parts, params);
+  revealOnScroll();
+}
+function renderPage(parts, params) {
   switch (parts[0]) {
     case 'catalog': return renderCatalog(params);
     case 'product': return renderProduct(parts[1]);
@@ -662,7 +772,7 @@ async function loadShop() {
 
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-add]');
-  if (b) { e.preventDefault(); addToCart(b.dataset.add); }
+  if (b) { e.preventDefault(); addToCart(b.dataset.add, 1, false, b); }
 });
 $('#menuBtn').onclick = () => $('#nav').classList.toggle('open');
 $('#searchForm').onsubmit = (e) => {
