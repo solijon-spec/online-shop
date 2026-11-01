@@ -5,22 +5,22 @@
 function createSeed(passwordHash) {
   const now = Date.now();
   const categories = [
-    { id: 'pc', name: 'Tayyor kompyuterlar', icon: '🖥️', pcPart: false, sort: 1 },
-    { id: 'keyboard', name: 'Klaviaturalar', icon: '⌨️', pcPart: false, sort: 2 },
-    { id: 'mouse', name: 'Sichqonchalar', icon: '🖱️', pcPart: false, sort: 3 },
-    { id: 'headphones', name: 'Quloqchinlar', icon: '🎧', pcPart: false, sort: 4 },
-    { id: 'monitor', name: 'Monitorlar', icon: '📺', pcPart: false, sort: 5 },
-    { id: 'camera', name: 'Kameralar', icon: '📷', pcPart: false, sort: 6 },
-    { id: 'watch', name: 'Smart soatlar', icon: '⌚', pcPart: false, sort: 7 },
-    { id: 'charger', name: 'Zaryadkalar', icon: '🔌', pcPart: false, sort: 8 },
-    { id: 'cpu', name: 'Protsessorlar', icon: '🧠', pcPart: true, sort: 20 },
-    { id: 'motherboard', name: 'Ona platalar', icon: '🧩', pcPart: true, sort: 21 },
-    { id: 'ram', name: 'Operativ xotira', icon: '💾', pcPart: true, sort: 22 },
-    { id: 'gpu', name: 'Videokartalar', icon: '🎮', pcPart: true, sort: 23 },
-    { id: 'ssd', name: 'SSD xotira', icon: '💽', pcPart: true, sort: 24 },
-    { id: 'psu', name: 'Blok pitaniya', icon: '⚡', pcPart: true, sort: 25 },
-    { id: 'case', name: 'Korpuslar', icon: '🗄️', pcPart: true, sort: 26 },
-    { id: 'cooler', name: 'Sovutish', icon: '❄️', pcPart: true, sort: 27 },
+    { id: 'pc', name: 'Tayyor kompyuterlar', icon: 'pc', color: 'red', pcPart: false, sort: 1 },
+    { id: 'keyboard', name: 'Klaviaturalar', icon: 'keyboard', color: 'indigo', pcPart: false, sort: 2 },
+    { id: 'mouse', name: 'Sichqonchalar', icon: 'mouse', color: 'teal', pcPart: false, sort: 3 },
+    { id: 'headphones', name: 'Quloqchinlar', icon: 'headphones', color: 'pink', pcPart: false, sort: 4 },
+    { id: 'monitor', name: 'Monitorlar', icon: 'monitor', color: 'mint', pcPart: false, sort: 5 },
+    { id: 'camera', name: 'Kameralar', icon: 'camera', color: 'graphite', pcPart: false, sort: 6 },
+    { id: 'watch', name: 'Smart soatlar', icon: 'watch', color: 'orange', pcPart: false, sort: 7 },
+    { id: 'charger', name: 'Zaryadkalar', icon: 'plug', color: 'green', pcPart: false, sort: 8 },
+    { id: 'cpu', name: 'Protsessorlar', icon: 'cpu', color: 'blue', pcPart: true, sort: 20 },
+    { id: 'motherboard', name: 'Ona platalar', icon: 'circuit', color: 'green', pcPart: true, sort: 21 },
+    { id: 'ram', name: 'Operativ xotira', icon: 'memory', color: 'purple', pcPart: true, sort: 22 },
+    { id: 'gpu', name: 'Videokartalar', icon: 'gamepad', color: 'red', pcPart: true, sort: 23 },
+    { id: 'ssd', name: 'SSD xotira', icon: 'drive', color: 'gray', pcPart: true, sort: 24 },
+    { id: 'psu', name: 'Blok pitaniya', icon: 'zap', color: 'yellow', pcPart: true, sort: 25 },
+    { id: 'case', name: 'Korpuslar', icon: 'tower', color: 'graphite', pcPart: true, sort: 26 },
+    { id: 'cooler', name: 'Sovutish', icon: 'fan', color: 'teal', pcPart: true, sort: 27 },
   ];
 
   const p = (id, categoryId, name, price, extra = {}) => ({

@@ -13,7 +13,7 @@
 <body>
   <div id="login" class="login" hidden>
     <form class="login-box" id="loginForm">
-      <div class="brand"><span class="logo-mark">M<sup>+</sup></span><div><b>MobilePlus</b><small>Admin panel</small></div></div>
+      <div class="brand"><span class="logo-mark app-ico">M<sup>+</sup></span><div><b>MobilePlus</b><small>Admin panel</small></div></div>
       <label class="field"><span>Parol</span><input class="input" type="password" name="password" autocomplete="current-password" required autofocus></label>
       <div class="err" id="loginErr"></div>
       <button class="btn btn-primary btn-block">Kirish</button>
@@ -23,27 +23,28 @@
 
   <div id="shell" class="shell" hidden>
     <aside class="side">
-      <div class="brand"><span class="logo-mark">M<sup>+</sup></span><div><b id="shopName">MobilePlus</b><small>Admin panel</small></div></div>
+      <div class="brand"><span class="logo-mark app-ico">M<sup>+</sup></span><div><b id="shopName">MobilePlus</b><small>Admin panel</small></div></div>
       <nav id="sideNav">
-        <a href="#dashboard" data-v="dashboard">📊 <span>Bosh sahifa</span></a>
-        <a href="#orders" data-v="orders">🧾 <span>Buyurtmalar</span> <em id="newBadge" class="nbadge" hidden>0</em></a>
-        <a href="#products" data-v="products">📦 <span>Mahsulotlar</span></a>
-        <a href="#categories" data-v="categories">🗂️ <span>Kategoriyalar</span></a>
-        <a href="#settings" data-v="settings">⚙️ <span>Sozlamalar</span></a>
+        <a href="#dashboard" data-v="dashboard"><i data-ico="chart" data-c="blue" data-s="xs"></i> <span>Bosh sahifa</span></a>
+        <a href="#orders" data-v="orders"><i data-ico="receipt" data-c="red" data-s="xs"></i> <span>Buyurtmalar</span> <em id="newBadge" class="nbadge" hidden>0</em></a>
+        <a href="#products" data-v="products"><i data-ico="box" data-c="orange" data-s="xs"></i> <span>Mahsulotlar</span></a>
+        <a href="#categories" data-v="categories"><i data-ico="folder" data-c="teal" data-s="xs"></i> <span>Kategoriyalar</span></a>
+        <a href="#settings" data-v="settings"><i data-ico="settings" data-c="gray" data-s="xs"></i> <span>Sozlamalar</span></a>
       </nav>
       <div class="side-foot">
-        <a href="/" target="_blank">🌐 Saytni ko'rish</a>
-        <button id="logoutBtn" class="link">🚪 Chiqish</button>
+        <a href="/" target="_blank"><i data-ico="globe"></i> Saytni ko'rish</a>
+        <button id="logoutBtn" class="link"><i data-ico="logout"></i> Chiqish</button>
       </div>
     </aside>
     <main class="content">
-      <div id="pwWarn" class="warn" hidden>⚠️ Siz standart paroldan foydalanyapsiz. <a href="#settings">Sozlamalar</a> bo'limida parolni o'zgartiring.</div>
+      <div id="pwWarn" class="warn" hidden><i data-ico="alert"></i> Siz standart paroldan foydalanyapsiz. <a href="#settings">Sozlamalar</a> bo'limida parolni o'zgartiring.</div>
       <div id="view"></div>
     </main>
   </div>
 
   <div id="modal" class="modal" hidden><div class="modal-box" id="modalBox"></div></div>
   <div id="toast" class="toast"></div>
+  <script src="/icons.js"></script>
   <script src="/admin.js"></script>
 </body>
 </html>

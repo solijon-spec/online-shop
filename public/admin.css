@@ -17,8 +17,23 @@ h1, h2, h3 { margin: 0; line-height: 1.25; }
 [hidden] { display: none !important; }
 .muted { color: var(--muted); }
 
-.logo-mark { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #e3262f, #ff6a2b); display: grid; place-items: center; font-weight: 800; font-size: 17px; color: #fff; flex-shrink: 0; white-space: nowrap; }
-.logo-mark sup { font-size: 11px; }
+/* iOS uslubidagi ikonkalar */
+.i { width: 1.15em; height: 1.15em; flex-shrink: 0; vertical-align: -0.2em; }
+.btn .i { width: 16px; height: 16px; }
+.app-ico { --s: 44px; position: relative; flex-shrink: 0; display: inline-grid; place-items: center; width: var(--s); height: var(--s);
+  border-radius: calc(var(--s) * .2237); color: #fff; vertical-align: middle;
+  background: linear-gradient(165deg, var(--g1, #5ab0ff), var(--g2, #0040dd));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 -1px 2px rgba(0, 0, 0, .2), 0 calc(var(--s) * .1) calc(var(--s) * .25) -5px rgba(0, 0, 0, .35); }
+.app-ico::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .32), rgba(255, 255, 255, .06) 46%, transparent 50%); }
+.app-ico svg { position: relative; width: 56%; height: 56%; stroke-width: 2.1; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, .2)); }
+.app-ico.xs { --s: 26px; }
+.app-ico.xs svg { stroke-width: 2.4; }
+.app-ico.sm { --s: 34px; }
+.app-ico.lg { --s: 60px; }
+.h-ico { display: flex; align-items: center; gap: 10px; }
+.logo-mark { --s: 38px; --g1: #f04a30; --g2: #c00016; font-weight: 800; font-size: 17px; white-space: nowrap; letter-spacing: -.5px; }
+.logo-mark sup { position: relative; font-size: 11px; }
 .brand { display: flex; gap: 10px; align-items: center; }
 .brand b { display: block; font-size: 16px; }
 .brand small { color: var(--muted); font-size: 12px; }
@@ -40,7 +55,9 @@ h1, h2, h3 { margin: 0; line-height: 1.25; }
 .nbadge { margin-left: auto; background: #fff; color: var(--brand); font-style: normal; font-weight: 800; font-size: 12px; min-width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center; padding: 0 6px; }
 .side nav a:not(.active) .nbadge { background: var(--brand); color: #fff; }
 .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 6px; }
-.side-foot a, .side-foot .link { padding: 8px 12px; color: #aab1c0; border-radius: 10px; text-align: left; }
+.side-foot a, .side-foot .link { display: flex; align-items: center; gap: 10px; padding: 8px 12px; color: #aab1c0; border-radius: 10px; text-align: left; }
+.side nav a.active { box-shadow: 0 6px 18px -6px rgba(227, 38, 47, .6); }
+.side nav a.active .app-ico { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 0 0 1.5px rgba(255, 255, 255, .5); }
 .side-foot a:hover, .side-foot .link:hover { background: #1b2030; color: #fff; }
 .link { background: none; border: 0; cursor: pointer; padding: 0; }
 .content { padding: 26px; min-width: 0; }
@@ -78,6 +95,8 @@ textarea.input { resize: vertical; }
 /* Stats */
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
 .stat { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+.stat .app-ico { float: right; }
+.stat.hot .app-ico { --g1: rgba(255, 255, 255, .35) !important; --g2: rgba(255, 255, 255, .15) !important; }
 .stat small { color: var(--muted); font-weight: 500; }
 .stat b { display: block; font-size: 26px; font-weight: 800; margin-top: 4px; }
 .stat.hot { background: linear-gradient(135deg, #e3262f, #ff6a2b); color: #fff; border: 0; }
@@ -108,6 +127,19 @@ tr.is-new td { background: #fff8f8; }
 .st-cancelled { background: #eef0f3; color: #59606e; }
 .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; background: #f1f3f6; color: #4b5263; }
 .tag.red { background: #ffe9ea; color: #c81d25; }
+.tag.green { background: #e5f7ec; color: #15803d; }
+.tag .i { width: 12px; height: 12px; vertical-align: -2px; }
+
+/* Kategoriya ikonka tanlagichi */
+.cat-preview { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 14px; }
+.ico-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 6px; }
+.ico-picker button { height: 42px; border: 1px solid var(--border); border-radius: 11px; background: #fff; cursor: pointer; display: grid; place-items: center; color: #3b4252; transition: .12s; }
+.ico-picker button:hover { border-color: #c9ced9; background: #f6f7f9; }
+.ico-picker button.active { border-color: var(--brand); color: var(--brand); background: #fff1f1; box-shadow: 0 0 0 3px rgba(227, 38, 47, .12); }
+.ico-picker .i { width: 20px; height: 20px; }
+.color-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.color-picker button { width: 32px; height: 32px; border-radius: 9px; border: 0; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); transition: .12s; }
+.color-picker button.active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--text); transform: scale(1.08); }
 
 .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
 .fchip { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-weight: 500; font-size: 13px; }
@@ -116,7 +148,7 @@ tr.is-new td { background: #fff8f8; }
 .filters .input { max-width: 280px; margin-left: auto; }
 
 .empty { text-align: center; padding: 50px 20px; color: var(--muted); }
-.empty div { font-size: 44px; }
+.empty div { display: grid; place-items: center; margin-bottom: 10px; }
 
 /* Modal */
 .modal { position: fixed; inset: 0; background: rgba(12, 14, 20, .55); display: flex; align-items: flex-start; justify-content: center; padding: 30px 16px; overflow-y: auto; z-index: 60; }
@@ -148,10 +180,13 @@ tr.is-new td { background: #fff8f8; }
 .img-item img { width: 100%; height: 100%; object-fit: contain; }
 .img-item .main { position: absolute; left: 4px; top: 4px; background: var(--brand); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 6px; }
 .img-item .ctrl { position: absolute; inset: auto 0 0 0; display: flex; justify-content: space-between; padding: 4px; background: linear-gradient(transparent, rgba(0, 0, 0, .55)); }
-.img-item .ctrl button { background: rgba(255, 255, 255, .92); border: 0; border-radius: 6px; font-size: 11px; cursor: pointer; padding: 2px 6px; }
+.img-item .ctrl button { background: rgba(255, 255, 255, .92); border: 0; border-radius: 6px; cursor: pointer; padding: 3px 5px; display: grid; place-items: center; }
+.img-item .ctrl .i { width: 13px; height: 13px; }
 .img-add { width: 96px; height: 96px; border: 2px dashed #cdd2dc; border-radius: 12px; display: grid; place-items: center; text-align: center; cursor: pointer; color: var(--muted); font-size: 12px; }
 .img-add:hover { border-color: var(--brand); color: var(--brand); }
 .img-add input { display: none; }
+.img-add .i { width: 24px; height: 24px; }
+.thumb .app-ico { --s: 46px; border-radius: 10px; }
 
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(120px); background: #151821; color: #fff; padding: 12px 20px; border-radius: 12px; font-weight: 600; transition: .25s; z-index: 100; max-width: calc(100% - 32px); }
 .toast.show { transform: translateX(-50%) translateY(0); }

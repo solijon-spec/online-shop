@@ -4,13 +4,11 @@
 // window.MP3D.mountProduct(el, kind) — mahsulot sahifasidagi 3D ko'rinish
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-
 const RED = 0xe3262f;
 const ORANGE = 0xff6a2b;
+// Brend yorug'ligi: qizil ↔ to'q sariq orasida sokin "nafas oladi"
+const GLOW_A = new THREE.Color(0xff2a36);
+const GLOW_B = new THREE.Color(0xff7a3d);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isSmall = () => innerWidth < 760;
 const TAU = Math.PI * 2;
@@ -23,8 +21,8 @@ function webglOK() {
   } catch { return false; }
 }
 
-// ---------- Sahna (renderer, neon nur, kamera, chiroqlar, sikl) ----------
-function makeStage(el, { cameraZ = 10, lookY = 0.2, cameraY = 1.6, bloom = 0.9 } = {}) {
+// ---------- Sahna (renderer, kamera, chiroqlar, sikl) ----------
+function makeStage(el, { cameraZ = 10, lookY = 0.2, cameraY = 1.6, fitAspect = 0.9 } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, isSmall() ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -35,13 +33,6 @@ function makeStage(el, { cameraZ = 10, lookY = 0.2, cameraY = 1.6, bloom = 0.9 }
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
-
-  // Bloom — RGB chiroqlarga haqiqiy neon nur beradi
-  const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
-  const bloomPass = new UnrealBloomPass(new THREE.Vector2(256, 256), bloom, 0.5, 0.62);
-  composer.addPass(bloomPass);
-  composer.addPass(new OutputPass());
 
   scene.add(new THREE.HemisphereLight(0x9aa8ff, 0x1a0808, 0.9));
   const key = new THREE.DirectionalLight(0xffffff, 1.8);
@@ -55,7 +46,7 @@ function makeStage(el, { cameraZ = 10, lookY = 0.2, cameraY = 1.6, bloom = 0.9 }
   rimRed.position.set(-4, 2, -2);
   const rimOrange = new THREE.PointLight(ORANGE, 45, 20);
   rimOrange.position.set(4, 1, -3);
-  const front = new THREE.PointLight(0x6f8cff, 12, 15);
+  const front = new THREE.PointLight(0xffe2d0, 10, 15);
   front.position.set(0, 2, 6);
   scene.add(rimRed, rimOrange, front);
 
@@ -76,11 +67,9 @@ function makeStage(el, { cameraZ = 10, lookY = 0.2, cameraY = 1.6, bloom = 0.9 }
     const w = el.clientWidth, h = el.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
-    composer.setPixelRatio(renderer.getPixelRatio());
-    composer.setSize(w, h);
     camera.aspect = w / h;
     // Tor joyda kamera uzoqlashadi — modellar kesilib qolmaydi
-    const k = Math.max(1, 0.9 / camera.aspect);
+    const k = Math.max(1, fitAspect / camera.aspect);
     camera.position.set(0, cameraY, cameraZ * k);
     camera.lookAt(0, lookY, 0);
     camera.updateProjectionMatrix();
@@ -97,7 +86,7 @@ function makeStage(el, { cameraZ = 10, lookY = 0.2, cameraY = 1.6, bloom = 0.9 }
   const clock = new THREE.Clock();
   let raf = 0;
   let t = 0;
-  // Kuchsiz qurilmada sifat avtomatik pasayadi (bloom va soya o'chadi, piksel zichligi kamayadi)
+  // Kuchsiz qurilmada sifat avtomatik pasayadi (soya o'chadi, piksel zichligi kamayadi)
   let frames = 0, sampleTime = 0, lowQuality = false;
   const loop = () => {
     if (!renderer.domElement.isConnected) return dispose();
@@ -116,9 +105,8 @@ function makeStage(el, { cameraZ = 10, lookY = 0.2, cameraY = 1.6, bloom = 0.9 }
     }
     t += dt;
     updaters.forEach((f) => f(t, dt));
-    ring.material.opacity = 0.35 + Math.sin(t * 2) * 0.2;
-    if (lowQuality) renderer.render(scene, camera);
-    else composer.render(dt);
+    ring.material.opacity = 0.28 + Math.sin(t * 1.2) * 0.1;
+    renderer.render(scene, camera);
   };
   function dispose() {
     cancelAnimationFrame(raf);
@@ -128,7 +116,6 @@ function makeStage(el, { cameraZ = 10, lookY = 0.2, cameraY = 1.6, bloom = 0.9 }
       o.geometry?.dispose();
       [].concat(o.material || []).forEach((m) => { m.map?.dispose(); m.dispose(); });
     });
-    composer.dispose?.();
     renderer.dispose();
   }
   loop();
@@ -179,7 +166,8 @@ function pick(stage, e, targets) {
 function makeKit() {
   const rgb = [];
   const spinners = [];
-  let hue = 0;
+  let time = 0;
+  const tmp = new THREE.Color();
   const M = {
     body: new THREE.MeshStandardMaterial({ color: 0x1b1e26, metalness: 0.45, roughness: 0.38 }),
     body2: new THREE.MeshStandardMaterial({ color: 0x262a33, metalness: 0.35, roughness: 0.5 }),
@@ -196,23 +184,29 @@ function makeKit() {
   };
   const kit = {
     M, spinners,
-    boost: 0, // bosilganda 1 bo'ladi: ventilyatorlar tezlashadi, ranglar tez aylanadi
-    get hue() { return hue; },
-    glow(offset = 0, intensity = 2.4) {
-      const m = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0xff0000, emissiveIntensity: intensity, roughness: 0.4 });
-      rgb.push({ m, offset, prop: 'emissive' });
+    boost: 0, // bosilganda 1 bo'ladi: ventilyatorlar tezlashadi, chiroqlar yorqinlashadi
+    get time() { return time; },
+    glow(offset = 0, intensity = 1.6) {
+      const m = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: GLOW_A, emissiveIntensity: intensity, roughness: 0.4 });
+      rgb.push({ m, offset, base: intensity, prop: 'emissive' });
       return m;
     },
-    halo(offset = 0, opacity = 0.3) {
-      const m = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-      rgb.push({ m, offset, prop: 'color' });
+    halo(offset = 0, opacity = 0.2) {
+      const m = new THREE.MeshBasicMaterial({ color: GLOW_A, transparent: true, opacity: opacity * 0.6, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+      rgb.push({ m, offset, base: opacity * 0.6, prop: 'color' });
       return m;
     },
     update(dt) {
       kit.boost = Math.max(0, kit.boost - dt * 0.5);
-      hue += dt * (0.07 + kit.boost * 0.6);
-      for (const r of rgb) r.m[r.prop].setHSL((((hue + r.offset) % 1) + 1) % 1, 1, 0.5);
-      for (const s of spinners) s.rotation.z -= dt * (7 + kit.boost * 35);
+      time += dt * (1 + kit.boost * 3);
+      for (const r of rgb) {
+        const k = 0.5 + 0.5 * Math.sin(time * 0.9 + r.offset * TAU);
+        r.m[r.prop].copy(tmp.copy(GLOW_A).lerp(GLOW_B, k));
+        const pulse = (0.82 + 0.18 * k) * (1 + kit.boost * 0.9);
+        if (r.prop === 'emissive') r.m.emissiveIntensity = r.base * pulse;
+        else r.m.opacity = r.base * pulse;
+      }
+      for (const s of spinners) s.rotation.z -= dt * (5 + kit.boost * 30);
     },
   };
   return kit;
@@ -337,7 +331,7 @@ function keyboard(kit) {
   const caps = new THREE.InstancedMesh(new RoundedBoxGeometry(s, 0.09, s, 2, 0.02), kit.M.key, n);
   const glows = new THREE.InstancedMesh(
     new THREE.PlaneGeometry(s * 1.18, s * 1.18),
-    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }),
     n,
   );
   const m4 = new THREE.Matrix4();
@@ -357,15 +351,18 @@ function keyboard(kit) {
   shadows(g);
   // Bosilgan joydan oq to'lqin tarqaladi
   let ripple = null;
-  const update = (dt, hue) => {
+  const update = (dt, time) => {
     if (ripple) { ripple.r += dt * 3.2; if (ripple.r > 4) ripple = null; }
     for (let i = 0; i < n; i++) {
-      let light = 0.5;
+      const wave = 0.5 + 0.5 * Math.sin(pos[i][0] * 1.6 - time * 1.4);
+      let light = 0.2 + wave * 0.16;
+      let sat = 0.85;
       if (ripple) {
         const d = Math.hypot(pos[i][0] - ripple.x, pos[i][1] - ripple.z);
-        light += Math.max(0, 1 - Math.abs(d - ripple.r) * 5) * 0.45;
+        const r = Math.max(0, 1 - Math.abs(d - ripple.r) * 5);
+        light += r * 0.5; sat -= r * 0.6;
       }
-      glows.setColorAt(i, col.setHSL((((hue * 1.7 + pos[i][0] * 0.18) % 1) + 1) % 1, 1, light));
+      glows.setColorAt(i, col.setHSL(0.015 + wave * 0.035, sat, light));
     }
     glows.instanceColor.needsUpdate = true;
   };
@@ -407,32 +404,53 @@ function headset(kit) {
 
 function monitor(kit) {
   const g = new THREE.Group();
-  const tex = canvasTexture(640, 360, (ctx, w, h) => {
-    const bg = ctx.createLinearGradient(0, 0, w, h);
-    bg.addColorStop(0, '#0b0d14'); bg.addColorStop(0.6, '#2a0d14'); bg.addColorStop(1, '#4a1410');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
-    for (let i = 0; i < 26; i++) {
-      const bh = 40 + Math.abs(Math.sin(i * 0.7)) * 120;
-      ctx.fillStyle = `hsl(${(i * 12) % 360},100%,55%)`;
-      ctx.fillRect(40 + i * 22, h - 40 - bh, 14, bh);
-    }
-    ctx.font = 'bold 64px Inter, Arial, sans-serif';
-    ctx.fillStyle = '#fff'; ctx.fillText('MOBILE', 40, 100);
-    ctx.fillStyle = '#ff3b3b'; ctx.fillText('PLUS', 300, 100);
-  });
+  const tex = canvasTexture(1024, 576, drawLogoScreen);
+  // Inter shrifti yuklangach logotip qayta chiziladi
+  document.fonts?.ready.then(() => { drawLogoScreen(tex.image.getContext('2d'), 1024, 576); tex.needsUpdate = true; });
   const panel = rbox(2.7, 1.6, 0.1, 0.04, kit.M.body);
   panel.position.y = 1.05;
   g.add(panel);
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(2.55, 1.44), new THREE.MeshBasicMaterial({ map: tex }));
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(2.55, 1.44), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
   screen.position.set(0, 1.05, 0.052);
   const neck = box(0.14, 0.75, 0.12, kit.M.chrome);
   neck.position.set(0, 0.35, -0.12);
   const base = rbox(1.0, 0.06, 0.55, 0.025, kit.M.chrome);
   base.position.set(0, 0, -0.05);
-  const strip = box(2.4, 0.025, 0.02, kit.glow(0.4, 3));
-  strip.position.set(0, 0.26, 0.04);
+  const strip = box(2.4, 0.02, 0.02, kit.glow(0.4, 1.4));
+  strip.position.set(0, 0.255, 0.04);
   g.add(screen, neck, base, strip);
   return shadows(g);
+}
+
+// Monitor ekrani: qorong'i fon, markazda iOS uslubidagi "M+" belgisi va MOBILE PLUS yozuvi
+function drawLogoScreen(ctx, w, h) {
+  const bg = ctx.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#0d0f15'); bg.addColorStop(1, '#14090c');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+  const glow = ctx.createRadialGradient(w / 2, h * 0.42, 10, w / 2, h * 0.42, h * 0.6);
+  glow.addColorStop(0, 'rgba(227,38,47,.28)'); glow.addColorStop(1, 'rgba(227,38,47,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, w, h);
+  const s = 150, x = w / 2 - s / 2, y = h * 0.42 - s / 2 - 30, r = s * 0.2237;
+  const round = () => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + s, y, x + s, y + s, r); ctx.arcTo(x + s, y + s, x, y + s, r); ctx.arcTo(x, y + s, x, y, r); ctx.arcTo(x, y, x + s, y, r); ctx.closePath(); };
+  const tile = ctx.createLinearGradient(0, y, 0, y + s);
+  tile.addColorStop(0, '#f04a30'); tile.addColorStop(1, '#c00016');
+  ctx.save(); ctx.shadowColor = 'rgba(227,38,47,.55)'; ctx.shadowBlur = 40; round(); ctx.fillStyle = tile; ctx.fill(); ctx.restore();
+  const gloss = ctx.createLinearGradient(0, y, 0, y + s * 0.5);
+  gloss.addColorStop(0, 'rgba(255,255,255,.35)'); gloss.addColorStop(1, 'rgba(255,255,255,0)');
+  round(); ctx.fillStyle = gloss; ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '800 92px Inter, Arial, sans-serif'; ctx.fillText('M', w / 2 - 6, y + s / 2 + 4);
+  ctx.font = '800 44px Inter, Arial, sans-serif'; ctx.fillText('+', w / 2 + 42, y + s / 2 - 26);
+  ctx.font = '800 64px Inter, Arial, sans-serif';
+  const a = 'MOBILE ', b = 'PLUS';
+  const wa = ctx.measureText(a).width, wb = ctx.measureText(b).width;
+  const tx = w / 2 - (wa + wb) / 2, ty = y + s + 70;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff'; ctx.fillText(a, tx, ty);
+  ctx.fillStyle = '#ff3b3b'; ctx.fillText(b, tx + wa, ty);
+  ctx.textAlign = 'center';
+  ctx.font = '500 26px Inter, Arial, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.fillText('Kompyuter texnikasi va aksessuarlar', w / 2, ty + 56);
 }
 
 function watch(kit) {
@@ -530,11 +548,11 @@ function sparks(count = 160) {
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const mat = new THREE.PointsMaterial({ color: ORANGE, size: 0.045, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
+  const mat = new THREE.PointsMaterial({ color: ORANGE, size: 0.035, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
   const pts = new THREE.Points(geo, mat);
   const update = (dt, boost) => {
     const speed = 1 + boost * 6;
-    mat.size = 0.045 + boost * 0.05;
+    mat.size = 0.035 + boost * 0.03;
     for (let i = 0; i < count; i++) {
       let y = pos[i * 3 + 1] + dt * (0.25 + (i % 7) * 0.05) * speed;
       if (y > 3.3) y = -1.2;
@@ -550,38 +568,45 @@ function mountHero(el) {
   if (!el || !el.isConnected || el.dataset.mounted || !webglOK()) return false;
   el.dataset.mounted = '1';
   const small = isSmall();
-  const st = makeStage(el, small ? { cameraZ: 11, lookY: -0.15 } : { cameraZ: 10.5 });
+  const st = makeStage(el, small ? { cameraZ: 10.5, lookY: 0.1, fitAspect: 1.05 } : { cameraZ: 10, lookY: 0.3, fitAspect: 1.05 });
   const kit = makeKit();
   const pointer = makePointer(st);
   const world = new THREE.Group();
   st.scene.add(world);
 
+  const mon = monitor(kit);
+  mon.position.set(-1.05, -1.22, -0.25);
+  mon.rotation.y = 0.12;
   const pcG = pc(kit);
-  pcG.position.set(0.3, 0.55, -0.4);
-  pcG.rotation.y = -0.55;
-  pcG.scale.setScalar(0.95);
+  pcG.position.set(1.75, 0, -0.75);
+  pcG.rotation.y = -0.5;
+  pcG.scale.setScalar(0.85);
   const kb = keyboard(kit);
-  kb.g.position.set(-0.2, -1.05, 1.75);
-  kb.g.rotation.set(0.12, 0.12, 0);
+  kb.g.position.set(-1.0, -1.17, 1.15);
+  kb.g.scale.setScalar(0.82);
+  kb.g.rotation.y = 0.06;
   const ms = mouse(kit);
-  ms.position.set(2.05, -1.05, 1.75);
-  ms.rotation.y = -0.3;
+  ms.position.set(0.95, -1.08, 1.25);
+  ms.scale.setScalar(0.9);
+  ms.rotation.y = -0.25;
   const hs = headset(kit);
-  hs.position.set(-2.35, 1.05, 0.6);
+  hs.position.set(-2.85, 0.75, 0.45);
+  hs.scale.setScalar(0.78);
   hs.rotation.set(0.2, 0.6, 0.25);
-  const sp = sparks();
-  world.add(pcG, kb.g, ms, hs, sp.pts);
+  const sp = sparks(90);
+  world.add(mon, pcG, kb.g, ms, hs, sp.pts);
+  world.position.x = 0.2;
 
   // Bosilganda har bir obyektning o'z effekti bor
   const fx = { msJump: 0, hsSpin: 0, hsSpinTarget: 0 };
   const targets = [
-    { obj: pcG, name: 'pc' }, { obj: kb.g, name: 'kb' }, { obj: ms, name: 'mouse' }, { obj: hs, name: 'headset' },
+    { obj: pcG, name: 'pc' }, { obj: mon, name: 'monitor' }, { obj: kb.g, name: 'kb' }, { obj: ms, name: 'mouse' }, { obj: hs, name: 'headset' },
   ];
   pointer.onHover = (e) => { st.renderer.domElement.style.cursor = pick(st, e, targets) ? 'pointer' : ''; };
   pointer.onTap = (e) => {
     const hit = pick(st, e, targets);
     if (!hit) return;
-    if (hit.name === 'pc') kit.boost = 1;
+    if (hit.name === 'pc' || hit.name === 'monitor') kit.boost = 1;
     if (hit.name === 'kb') kb.tap(hit.point);
     if (hit.name === 'mouse') fx.msJump = 1;
     if (hit.name === 'headset') fx.hsSpinTarget += TAU;
@@ -591,25 +616,25 @@ function mountHero(el) {
   world.scale.setScalar(0.01);
   st.updaters.push((t, dt) => {
     kit.update(dt);
-    kb.update(dt, kit.hue);
+    kb.update(dt, kit.time);
     sp.update(dt, kit.boost);
     const intro = ease(t / 1.1);
     world.scale.setScalar(0.01 + 0.99 * intro);
     // Sahifa pastga aylantirilsa sahna buriladi va ko'tariladi
     const r = el.getBoundingClientRect();
     const scroll = Math.min(1, Math.max(0, -r.top / r.height));
-    const targetY = Math.sin(t * 0.25) * 0.25 + pointer.spin + pointer.x * 0.35 + (1 - intro) * -1.5 + scroll * 1.6;
+    const targetY = Math.sin(t * 0.25) * 0.18 + pointer.spin + pointer.x * 0.35 + (1 - intro) * -1.5 + scroll * 1.6;
     world.rotation.y += (targetY - world.rotation.y) * 0.06;
     world.rotation.x += (pointer.y * 0.08 + scroll * 0.25 - world.rotation.x) * 0.06;
     world.position.y = scroll * 0.6;
-    pcG.position.y = 0.55 + Math.sin(t * 0.8) * 0.05 + kit.boost * Math.sin(t * 60) * 0.015;
+    pcG.position.y = kit.boost * Math.sin(t * 60) * 0.012;
     fx.hsSpin += (fx.hsSpinTarget - fx.hsSpin) * 0.08;
-    hs.position.y = 1.05 + Math.sin(t * 1.2) * 0.13;
+    hs.position.y = 0.75 + Math.sin(t * 1.2) * 0.1;
     hs.rotation.set(0.2, 0.6 + fx.hsSpin, 0.25 + Math.sin(t * 0.9) * 0.08);
     fx.msJump = Math.max(0, fx.msJump - dt * 1.4);
     const j = Math.sin((1 - fx.msJump) * Math.PI) * (fx.msJump > 0 ? 1 : 0);
-    ms.position.y = -1.05 + Math.abs(Math.sin(t * 1.7)) * 0.05 + j * 0.7;
-    ms.rotation.y = -0.3 + (1 - fx.msJump) * (fx.msJump > 0 ? TAU : 0);
+    ms.position.y = -1.08 + j * 0.6;
+    ms.rotation.y = -0.25 + (1 - fx.msJump) * (fx.msJump > 0 ? TAU : 0);
   });
   el.classList.add('ready');
   return true;
@@ -618,7 +643,7 @@ function mountHero(el) {
 // ---------- PC konfigurator ----------
 function mountBuilder(el) {
   if (!el || !el.isConnected || !webglOK()) return null;
-  const st = makeStage(el, { cameraZ: 6.6, cameraY: 1.3, lookY: 0.1, bloom: 0.8 });
+  const st = makeStage(el, { cameraZ: 6.6, cameraY: 1.3, lookY: 0.1 });
   st.ring.scale.setScalar(0.75);
   const kit = makeKit();
   const pointer = makePointer(st);
@@ -687,7 +712,7 @@ function mountProduct(el, kind) {
   holder.scale.setScalar(0.01);
   st.updaters.push((t, dt) => {
     kit.update(dt);
-    obj?.update(dt, kit.hue);
+    obj?.update(dt, kit.time);
     holder.scale.setScalar(0.01 + 0.99 * ease(t / 0.9));
     const target = t * 0.35 + pointer.spin + pointer.x * 0.3;
     holder.rotation.y += (target - holder.rotation.y) * 0.08;

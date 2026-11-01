@@ -358,7 +358,7 @@ async function handleApi(req, res, url) {
     const b = await readBody(req);
     const name = str(b.name, 80);
     if (name.length < 2) fail(400, 'Kategoriya nomini kiriting');
-    const cat = { id: newId(), name, icon: str(b.icon, 8) || '📦', pcPart: !!b.pcPart, sort: Number(b.sort) || db.categories.length + 1 };
+    const cat = { id: newId(), name, icon: str(b.icon, 30) || 'box', color: str(b.color, 20) || 'blue', pcPart: !!b.pcPart, sort: Number(b.sort) || db.categories.length + 1 };
     db.categories.push(cat); save();
     return send(res, 201, cat);
   }
@@ -370,7 +370,7 @@ async function handleApi(req, res, url) {
       const b = await readBody(req);
       const name = str(b.name, 80);
       if (name.length < 2) fail(400, 'Kategoriya nomini kiriting');
-      Object.assign(cat, { name, icon: str(b.icon, 8) || '📦', pcPart: !!b.pcPart, sort: Number(b.sort) || 0 });
+      Object.assign(cat, { name, icon: str(b.icon, 30) || 'box', color: str(b.color, 20) || 'blue', pcPart: !!b.pcPart, sort: Number(b.sort) || 0 });
       save(); return send(res, 200, cat);
     }
     if (m === 'DELETE') {

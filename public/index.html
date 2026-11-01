@@ -14,27 +14,27 @@
   <header class="header">
     <div class="topbar">
       <div class="container topbar-in">
-        <span id="tb-address">📍 Izza ShowRoom</span>
+        <span id="tb-address"></span>
         <span id="tb-hours" class="hide-sm"></span>
-        <a id="tb-phone" href="#">📞</a>
+        <a id="tb-phone" href="#"></a>
       </div>
     </div>
     <div class="container header-in">
-      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Menyu">☰</button>
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Menyu" aria-expanded="false" aria-controls="nav"><i data-ico="menu"></i></button>
       <a href="#/" class="logo">
-        <span class="logo-mark">M<sup>+</sup></span>
+        <span class="logo-mark app-ico">M<sup>+</sup></span>
         <span class="logo-text">MOBILE <b>PLUS</b></span>
       </a>
       <form class="search" id="searchForm" role="search">
-        <input id="searchInput" type="search" placeholder="Mahsulot qidirish…" autocomplete="off">
-        <button aria-label="Qidirish">🔍</button>
+        <input id="searchInput" type="search" aria-label="Mahsulot qidirish" placeholder="Mahsulot qidirish…" autocomplete="off">
+        <button aria-label="Qidirish"><i data-ico="search"></i></button>
       </form>
       <nav class="nav" id="nav">
         <a href="#/catalog">Katalog</a>
         <a href="#/build">PC yig'ish</a>
         <a href="#/track">Buyurtma holati</a>
       </nav>
-      <a href="#/cart" class="cart-btn" aria-label="Savat">🛒<span id="cartCount" class="cart-count">0</span></a>
+      <a href="#/cart" class="cart-btn" aria-label="Savat"><i data-ico="cart"></i><span id="cartCount" class="cart-count">0</span></a>
     </div>
   </header>
 
@@ -43,7 +43,7 @@
   <footer class="footer">
     <div class="container footer-in">
       <div>
-        <a href="#/" class="logo"><span class="logo-mark">M<sup>+</sup></span><span class="logo-text">MOBILE <b>PLUS</b></span></a>
+        <a href="#/" class="logo"><span class="logo-mark app-ico">M<sup>+</sup></span><span class="logo-text">MOBILE <b>PLUS</b></span></a>
         <p class="muted" id="ft-tagline"></p>
       </div>
       <div>
@@ -61,14 +61,14 @@
       </div>
       <div>
         <h4>Ijtimoiy tarmoqlar</h4>
-        <a id="ft-tg" target="_blank" rel="noopener">✈️ Telegram kanal</a>
-        <a id="ft-ig" target="_blank" rel="noopener">📸 Instagram</a>
+        <a id="ft-tg" target="_blank" rel="noopener"><i data-ico="send"></i> Telegram kanal</a>
+        <a id="ft-ig" target="_blank" rel="noopener"><i data-ico="instagram"></i> Instagram</a>
       </div>
     </div>
     <div class="container copy muted" id="ft-copy"></div>
   </footer>
 
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="spot" class="spot" aria-hidden="true"></div>
   <script type="importmap">
     { "imports": {
@@ -76,6 +76,7 @@
       "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
     } }
   </script>
+  <script src="/icons.js"></script>
   <script src="/app.js"></script>
   <script type="module" src="/scene3d.js"></script>
 </body>

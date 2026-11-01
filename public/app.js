@@ -6,6 +6,8 @@ const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = (n) => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + " so'm";
 const app = $('#app');
+const I = (name) => Icons.svg(name);
+const T = (name, color, size) => Icons.tile(name, color, size);
 
 let S = { settings: {}, categories: [], products: [] };
 let cart = loadCart();
@@ -65,8 +67,8 @@ function flyToCart(fromEl) {
 function model3dKind(p) {
   const c = catById(p.categoryId);
   const byId = { keyboard: 'keyboard', mouse: 'mouse', headphones: 'headset', monitor: 'monitor', watch: 'watch', camera: 'camera', charger: 'charger' };
-  const byIcon = { '⌨️': 'keyboard', '🖱️': 'mouse', '🎧': 'headset', '📺': 'monitor', '⌚': 'watch', '📷': 'camera', '🔌': 'charger' };
-  return byId[c?.id] || byIcon[c?.icon] || 'pc';
+  const byIcon = { keyboard: 'keyboard', mouse: 'mouse', headphones: 'headset', monitor: 'monitor', watch: 'watch', camera: 'camera', plug: 'charger' };
+  return byId[c?.id] || byIcon[Icons.catIcon(c)[0]] || 'pc';
 }
 function totals(delivery = 'pickup') {
   const lines = cart.items.map((i) => ({ ...i, p: prodById(i.id) })).filter((l) => l.p);
@@ -91,7 +93,8 @@ function toast(msg, isError) {
 function img(p, i = 0) {
   const src = p.images && p.images[i];
   if (src) return `<img src="${esc(src)}" alt="${esc(p.name)}" loading="lazy">`;
-  return `<div class="ph"><span>${esc(catById(p.categoryId)?.icon || '📦')}</span></div>`;
+  const [name, color] = Icons.catIcon(catById(p.categoryId));
+  return `<div class="ph" style="--g1:${Icons.COLORS[color][0]};--g2:${Icons.COLORS[color][1]}">${T(name, color, 'xl')}</div>`;
 }
 function stockText(p) {
   if (p.stock == null) return '<span class="stock-ok">● Mavjud</span>';
@@ -110,7 +113,7 @@ function card(p) {
       <div class="card-cat">${esc(catById(p.categoryId)?.name)}</div>
       <a href="#/product/${p.id}" class="card-title">${esc(p.name)}</a>
       <div class="price-row"><b>${money(p.price)}</b>${sale ? `<s>${money(p.oldPrice)}</s>` : ''}</div>
-      <button class="btn btn-primary btn-block" data-add="${p.id}" ${out ? 'disabled' : ''}>${out ? 'Tugagan' : '🛒 Savatga'}</button>
+      <button class="btn btn-primary btn-block" data-add="${p.id}" ${out ? 'disabled' : ''}>${out ? 'Tugagan' : `${I('cart')} Savatga`}</button>
     </div></article>`;
 }
 function normPhone(v) {
@@ -172,65 +175,65 @@ function renderHome() {
         <p>${esc(st.heroText)}</p>
         <div class="hero-actions">
           <a href="#/catalog" class="btn btn-primary btn-lg">Katalogga o'tish</a>
-          <a href="#/build" class="btn btn-lg">🛠️ PC yig'ish</a>
+          <a href="#/build" class="btn btn-lg">${I('wrench')} PC yig'ish</a>
         </div>
       </div>
       <div class="hero-3d" id="hero3d">
-        <div class="hero-art hero-fallback">🖥️<small>⌨️🖱️🎧</small></div>
-        <span class="drag-hint">↔ Aylantiring · 👆 Bosib ko'ring</span>
+        <div class="hero-fallback">${T('pc', 'red', 'xl')}</div>
+        <span class="drag-hint">${I('rotate')} Aylantiring · bosib ko'ring</span>
       </div>
     </section>
     <div class="perks">
-      <div class="perk"><span>✅</span><div><b>Kafolat</b><small>Barcha tovarlarga</small></div></div>
-      <div class="perk"><span>🚚</span><div><b>Yetkazib berish</b><small>${esc(st.deliveryNote)}</small></div></div>
-      <div class="perk"><span>💳</span><div><b>Kartaga to'lov</b><small>${esc(st.cardBank)} / Humo</small></div></div>
-      <div class="perk"><span>📦</span><div><b>Optom narxlar</b><small>Ulgurji xaridorlarga</small></div></div>
+      <div class="perk">${T('shield', 'green')}<div><b>Kafolat</b><small>Barcha tovarlarga</small></div></div>
+      <div class="perk">${T('truck', 'blue')}<div><b>Yetkazib berish</b><small>${esc(st.deliveryNote)}</small></div></div>
+      <div class="perk">${T('card', 'indigo')}<div><b>Kartaga to'lov</b><small>${esc(st.cardBank)} / Humo</small></div></div>
+      <div class="perk">${T('box', 'orange')}<div><b>Optom narxlar</b><small>Ulgurji xaridorlarga</small></div></div>
     </div>
 
     <section class="section">
-      <div class="section-head"><h2>Kategoriyalar</h2><a href="#/catalog">Barchasi →</a></div>
+      <div class="section-head"><h2>Kategoriyalar</h2><a class="more" href="#/catalog"><span>Barchasi</span> ${I('arrowRight')}</a></div>
       <div class="cats">
-        ${mainCats.map((c) => `<a class="cat" href="#/catalog?cat=${c.id}"><div class="ico">${esc(c.icon)}</div><b>${esc(c.name)}</b><small>${count(c.id)} ta mahsulot</small></a>`).join('')}
-        <a class="cat" href="#/build"><div class="ico">🛠️</div><b>PC qismlari</b><small>O'zingiz yig'ing</small></a>
+        ${mainCats.map((c) => `<a class="cat" href="#/catalog?cat=${c.id}"><div class="ico">${Icons.catTile(c, 'lg')}</div><b>${esc(c.name)}</b><small>${count(c.id)} ta mahsulot</small></a>`).join('')}
+        <a class="cat" href="#/build"><div class="ico">${T('wrench', 'blue', 'lg')}</div><b>PC qismlari</b><small>O'zingiz yig'ing</small></a>
       </div>
     </section>
 
     ${brands.length ? `<section class="section marquee" aria-label="Brendlar">
-      <div class="marquee-track">${[0, 1].map((half) => `<div class="marquee-half" ${half ? 'aria-hidden="true"' : ''}>${brands.map((b) => `<a href="#/catalog?q=${encodeURIComponent(b)}" tabindex="${half ? -1 : 0}">${esc(b)}</a><span>✦</span>`).join('')}</div>`).join('')}</div>
+      <div class="marquee-track">${[0, 1].map((half) => `<div class="marquee-half" ${half ? 'aria-hidden="true"' : ''}>${brands.map((b) => `<a href="#/catalog?q=${encodeURIComponent(b)}" tabindex="${half ? -1 : 0}">${esc(b)}</a><span>${I('sparkles')}</span>`).join('')}</div>`).join('')}</div>
     </section>` : ''}
 
     ${featured.length ? `<section class="section">
-      <div class="section-head"><h2>🔥 Ommabop mahsulotlar</h2><a href="#/catalog">Barchasi →</a></div>
-      <div class="grid">${featured.map(card).join('')}</div></section>` : ''}
+      <div class="section-head"><h2>${T('flame', 'orange', 'sm')} Ommabop mahsulotlar</h2><div class="head-actions"><a class="more" href="#/catalog"><span>Barchasi</span> ${I('arrowRight')}</a><span class="rail-nav"><button class="icon-btn" data-rail-prev aria-label="Oldingi">${I('arrowLeft')}</button><button class="icon-btn" data-rail-next aria-label="Keyingi">${I('arrowRight')}</button></span></div></div>
+      <div class="rail">${featured.map(card).join('')}</div></section>` : ''}
 
     <section class="section">
       <div class="banner banner-build">
-        <div><h3>🛠️ Kompyuterni o'zingiz yig'ing</h3>
+        ${T('wrench', 'blue', 'lg')}<div class="banner-text"><h3>Kompyuterni o'zingiz yig'ing</h3>
         <p>Protsessor, videokarta, xotira va boshqa qismlarni tanlang — mutaxassislarimiz yig'ib, sozlab beradi${st.assemblyFee ? ` (yig'ish xizmati ${money(st.assemblyFee)})` : ''}.</p></div>
         <a href="#/build" class="btn btn-primary btn-lg">Konfigurator</a>
       </div>
     </section>
 
     ${newest.length ? `<section class="section">
-      <div class="section-head"><h2>Yangi kelganlar</h2><a href="#/catalog?sort=new">Barchasi →</a></div>
-      <div class="grid">${newest.map(card).join('')}</div></section>` : ''}
+      <div class="section-head"><h2>Yangi kelganlar</h2><div class="head-actions"><a class="more" href="#/catalog?sort=new"><span>Barchasi</span> ${I('arrowRight')}</a><span class="rail-nav"><button class="icon-btn" data-rail-prev aria-label="Oldingi">${I('arrowLeft')}</button><button class="icon-btn" data-rail-next aria-label="Keyingi">${I('arrowRight')}</button></span></div></div>
+      <div class="rail">${newest.map(card).join('')}</div></section>` : ''}
 
     <section class="section">
       <div class="section-head"><h2>Qanday buyurtma beriladi?</h2></div>
       <div class="steps">
-        <div class="step"><span>🛒</span><b>Tanlang</b><p>Mahsulotni savatga qo'shing yoki PC yig'ing</p></div>
-        <div class="step"><span>📝</span><b>Ma'lumot kiriting</b><p>Ism va ishlaydigan telefon raqamingiz</p></div>
-        <div class="step"><span>💳</span><b>Kartaga to'lang</b><p>Do'kon kartasiga o'tkazib, chekni yuklang</p></div>
-        <div class="step"><span>🚚</span><b>Qabul qiling</b><p>Operator qo'ng'iroq qiladi va yetkazib beradi</p></div>
+        <div class="step">${T('cart', 'red')}<b>Tanlang</b><p>Mahsulotni savatga qo'shing yoki PC yig'ing</p></div>
+        <div class="step">${T('clipboard', 'indigo')}<b>Ma'lumot kiriting</b><p>Ism va ishlaydigan telefon raqamingiz</p></div>
+        <div class="step">${T('card', 'blue')}<b>Kartaga to'lang</b><p>Do'kon kartasiga o'tkazib, chekni yuklang</p></div>
+        <div class="step">${T('truck', 'green')}<b>Qabul qiling</b><p>Operator qo'ng'iroq qiladi va yetkazib beradi</p></div>
       </div>
     </section>
 
     <section class="section">
       <div class="banner">
-        <div><h3>📦 Optom xaridlar</h3><p>${esc(st.wholesaleText)}</p></div>
+        ${T('box', 'orange', 'lg')}<div class="banner-text"><h3>Optom xaridlar</h3><p>${esc(st.wholesaleText)}</p></div>
         <div class="hero-actions">
-          ${st.telegram ? `<a href="${esc(st.telegram)}" target="_blank" rel="noopener" class="btn btn-primary">✈️ Telegram kanal</a>` : ''}
-          <a href="tel:${esc(String(st.phone).replace(/[^\d+]/g, ''))}" class="btn">📞 ${esc(st.phone)}</a>
+          ${st.telegram ? `<a href="${esc(st.telegram)}" target="_blank" rel="noopener" class="btn btn-primary">${I('send')} Telegram kanal</a>` : ''}
+          <a href="tel:${esc(String(st.phone).replace(/[^\d+]/g, ''))}" class="btn">${I('phone')} ${esc(st.phone)}</a>
         </div>
       </div>
     </section>`;
@@ -260,18 +263,18 @@ function renderCatalog(params) {
   const link = (c) => `#/catalog?${new URLSearchParams({ ...(c ? { cat: c } : {}), ...(sort !== 'popular' ? { sort } : {}) })}`;
   const count = (id) => S.products.filter((p) => p.categoryId === id).length;
   const title = q ? `"${esc(q)}" bo'yicha qidiruv` : cat ? esc(catById(cat)?.name || 'Katalog') : 'Barcha mahsulotlar';
-  const catLinks = (arr) => arr.map((c) => `<a href="${link(c.id)}" class="${c.id === cat ? 'active' : ''}">${esc(c.icon)} ${esc(c.name)}<small>${count(c.id)}</small></a>`).join('');
+  const catLinks = (arr) => arr.map((c) => `<a href="${link(c.id)}" class="${c.id === cat ? 'active' : ''}">${Icons.catTile(c, 'xs')} ${esc(c.name)}<small>${count(c.id)}</small></a>`).join('');
   app.innerHTML = `
     <div class="catalog">
       <aside class="sidebar">
-        <a href="${link('')}" class="${!cat && !q ? 'active' : ''}">🗂️ Barchasi<small>${S.products.length}</small></a>
+        <a href="${link('')}" class="${!cat && !q ? 'active' : ''}">${T('grid', 'graphite', 'xs')} Barchasi<small>${S.products.length}</small></a>
         <hr>${catLinks(S.categories.filter((c) => !c.pcPart))}
         <hr><div class="sb-title">PC qismlari</div>${catLinks(S.categories.filter((c) => c.pcPart))}
       </aside>
       <div>
         <div class="chips">
           <a class="chip ${!cat ? 'active' : ''}" href="${link('')}">Barchasi</a>
-          ${S.categories.map((c) => `<a class="chip ${c.id === cat ? 'active' : ''}" href="${link(c.id)}">${esc(c.icon)} ${esc(c.name)}</a>`).join('')}
+          ${S.categories.map((c) => `<a class="chip ${c.id === cat ? 'active' : ''}" href="${link(c.id)}">${Icons.catTile(c, 'xxs')} ${esc(c.name)}</a>`).join('')}
         </div>
         <div class="toolbar">
           <h1>${title} <small class="muted" style="font-size:14px;font-weight:500">${list.length} ta</small></h1>
@@ -283,7 +286,7 @@ function renderCatalog(params) {
           </select>
         </div>
         ${list.length ? `<div class="grid">${list.map(card).join('')}</div>`
-          : `<div class="empty"><div class="big">🔎</div><p>Hech narsa topilmadi</p><a href="#/catalog" class="btn">Barcha mahsulotlar</a></div>`}
+          : `<div class="empty"><div class="big">${T('search', 'gray', 'xl')}</div><p>Hech narsa topilmadi</p><a href="#/catalog" class="btn">Barcha mahsulotlar</a></div>`}
       </div>
     </div>`;
   const sel = $('#sortSel');
@@ -297,7 +300,7 @@ function renderCatalog(params) {
 
 function renderProduct(id) {
   const p = prodById(id);
-  if (!p) { app.innerHTML = `<div class="empty"><div class="big">😕</div><p>Mahsulot topilmadi</p><a href="#/catalog" class="btn">Katalog</a></div>`; return; }
+  if (!p) { app.innerHTML = `<div class="empty"><div class="big">${T('alert', 'gray', 'xl')}</div><p>Mahsulot topilmadi</p><a href="#/catalog" class="btn">Katalog</a></div>`; return; }
   const c = catById(p.categoryId);
   const out = p.stock != null && p.stock <= 0;
   const specs = String(p.specs || '').split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
@@ -320,14 +323,14 @@ function renderProduct(id) {
         <div class="p-price"><b>${money(p.price)}</b>${p.oldPrice > p.price ? `<s>${money(p.oldPrice)}</s>` : ''}</div>
         <div class="buy-row">
           <div class="qty"><button data-q="-1">−</button><input id="qty" type="number" value="1" min="1"><button data-q="1">+</button></div>
-          <button class="btn btn-primary btn-lg" id="addBtn" ${out ? 'disabled' : ''}>🛒 Savatga</button>
+          <button class="btn btn-primary btn-lg" id="addBtn" ${out ? 'disabled' : ''}>${I('cart')} Savatga</button>
           <button class="btn btn-lg" id="buyBtn" ${out ? 'disabled' : ''}>Hozir sotib olish</button>
         </div>
         <div class="trust">
-          <div>✅ Rasmiy kafolat</div>
-          <div>🚚 ${esc(st.deliveryNote)}</div>
-          <div>💳 Kartaga to'lov (${esc(st.cardBank)})</div>
-          <div>📍 ${esc(st.address)}</div>
+          <div>${T('shield', 'green', 'xs')} Rasmiy kafolat</div>
+          <div>${T('truck', 'blue', 'xs')} ${esc(st.deliveryNote)}</div>
+          <div>${T('card', 'indigo', 'xs')} Kartaga to'lov (${esc(st.cardBank)})</div>
+          <div>${T('pin', 'red', 'xs')} ${esc(st.address)}</div>
         </div>
         ${p.description ? `<div class="panel" style="margin-top:18px"><h3>Tavsif</h3><div class="desc">${esc(p.description)}</div></div>` : ''}
         ${specs ? `<div class="panel"><h3>Xususiyatlari</h3><table class="specs">${specs}</table></div>` : ''}
@@ -374,7 +377,7 @@ function cartLinesHtml(t, editable) {
       <div class="cart-right">
         ${editable ? `<div class="qty"><button data-dec="${l.p.id}">−</button><input value="${l.qty}" readonly><button data-inc="${l.p.id}">+</button></div>` : ''}
         <b>${money(l.p.price * l.qty)}</b>
-        ${editable ? `<button class="link-btn" data-del="${l.p.id}">✕ O'chirish</button>` : ''}
+        ${editable ? `<button class="link-btn" data-del="${l.p.id}">${I('trash')} O'chirish</button>` : ''}
       </div>
     </div>`).join('');
 }
@@ -389,7 +392,7 @@ function summaryHtml(t, showDelivery) {
 function renderCart() {
   const t = totals();
   if (!t.lines.length) {
-    app.innerHTML = `<div class="empty"><div class="big">🛒</div><h2>Savat bo'sh</h2><p>Katalogdan kerakli mahsulotlarni tanlang</p><a href="#/catalog" class="btn btn-primary">Katalogga o'tish</a></div>`;
+    app.innerHTML = `<div class="empty"><div class="big">${T('cart', 'red', 'xl')}</div><h2>Savat bo'sh</h2><p>Katalogdan kerakli mahsulotlarni tanlang</p><a href="#/catalog" class="btn btn-primary">Katalogga o'tish</a></div>`;
     return;
   }
   const st = S.settings;
@@ -399,7 +402,7 @@ function renderCart() {
       <div class="panel">
         ${cartLinesHtml(t, true)}
         ${st.assemblyFee > 0 ? `<label class="check" style="margin-top:16px"><input type="checkbox" id="asmChk" ${cart.assembly ? 'checked' : ''}>
-          <span>🛠️ <b>PC yig'ish xizmati</b> — tanlangan qismlardan kompyuterni yig'ib, Windows o'rnatib beramiz (+${money(st.assemblyFee)})</span></label>` : ''}
+          ${T('wrench', 'blue', 'sm')}<span><b>PC yig'ish xizmati</b> — tanlangan qismlardan kompyuterni yig'ib, Windows o'rnatib beramiz (+${money(st.assemblyFee)})</span></label>` : ''}
       </div>
       <aside class="panel summary">
         <h3>Buyurtma</h3>
@@ -431,29 +434,29 @@ function renderCheckout() {
         <div class="panel">
           <h3>1. Shaxsiy ma'lumotlar</h3>
           <div class="row">
-            <div class="field"><label>Ism familiya <span class="req">*</span></label>
-              <input class="input" name="name" required maxlength="80" placeholder="Masalan: Aziz Karimov" value="${esc(saved.name)}"></div>
-            <div class="field"><label>Telefon raqam <span class="req">*</span></label>
-              <div class="phone-wrap"><span>+998</span><input class="input" name="phone" inputmode="numeric" placeholder="90 123 45 67" value="${esc(saved.phone)}"></div>
-              <span class="hint">Faqat <b>ishlaydigan</b> raqam — operator shu raqamga qo'ng'iroq qiladi</span></div>
+            <div class="field"><label for="coName">Ism familiya <span class="req">*</span></label>
+              <input class="input" id="coName" name="name" autocomplete="name" required maxlength="80" placeholder="Masalan: Aziz Karimov" value="${esc(saved.name)}"></div>
+            <div class="field"><label for="coPhone">Telefon raqam <span class="req">*</span></label>
+              <div class="phone-wrap"><span aria-hidden="true">+998</span><input class="input" id="coPhone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" aria-describedby="coPhoneHint" placeholder="90 123 45 67" value="${esc(saved.phone)}"></div>
+              <span class="hint" id="coPhoneHint">Faqat <b>ishlaydigan</b> raqam — operator shu raqamga qo'ng'iroq qiladi</span></div>
           </div>
-          <div class="field"><label>Qo'shimcha telefon (ixtiyoriy)</label>
-            <div class="phone-wrap"><span>+998</span><input class="input" name="phone2" inputmode="numeric" placeholder="93 123 45 67" value="${esc(saved.phone2)}"></div></div>
+          <div class="field"><label for="coPhone2">Qo'shimcha telefon (ixtiyoriy)</label>
+            <div class="phone-wrap"><span aria-hidden="true">+998</span><input class="input" id="coPhone2" name="phone2" type="tel" inputmode="numeric" placeholder="93 123 45 67" value="${esc(saved.phone2)}"></div></div>
         </div>
 
         <div class="panel">
           <h3>2. Qabul qilish usuli</h3>
-          <div class="seg">
-            <label><input type="radio" name="delivery" value="pickup" checked><b>🏬 Do'kondan olib ketish</b><small>${esc(st.address)} — bepul</small></label>
-            <label><input type="radio" name="delivery" value="delivery"><b>🚚 Yetkazib berish</b><small>${st.deliveryFee ? money(st.deliveryFee) : 'Bepul'}${st.freeDeliveryFrom ? `, ${money(st.freeDeliveryFrom)} dan bepul` : ''}</small></label>
+          <div class="seg" role="radiogroup" aria-label="Qabul qilish usuli">
+            <label><input type="radio" name="delivery" value="pickup" checked>${T('store', 'purple', 'sm')}<b>Do'kondan olib ketish</b><small>${esc(st.address)} — bepul</small></label>
+            <label><input type="radio" name="delivery" value="delivery">${T('truck', 'blue', 'sm')}<b>Yetkazib berish</b><small>${st.deliveryFee ? money(st.deliveryFee) : 'Bepul'}${st.freeDeliveryFrom ? `, ${money(st.freeDeliveryFrom)} dan bepul` : ''}</small></label>
           </div>
           <div id="addrBox" hidden>
             <div class="row">
-              <div class="field"><label>Shahar / viloyat</label><input class="input" name="city" maxlength="80" placeholder="Toshkent" value="${esc(saved.city)}"></div>
-              <div class="field"><label>Manzil <span class="req">*</span></label><input class="input" name="address" maxlength="300" placeholder="Ko'cha, uy, xonadon, mo'ljal" value="${esc(saved.address)}"></div>
+              <div class="field"><label for="coCity">Shahar / viloyat</label><input class="input" id="coCity" name="city" autocomplete="address-level1" maxlength="80" placeholder="Toshkent" value="${esc(saved.city)}"></div>
+              <div class="field"><label for="coAddr">Manzil <span class="req">*</span></label><input class="input" id="coAddr" name="address" autocomplete="street-address" maxlength="300" placeholder="Ko'cha, uy, xonadon, mo'ljal" value="${esc(saved.address)}"></div>
             </div>
           </div>
-          <div class="field"><label>Izoh (ixtiyoriy)</label><textarea class="input" name="comment" rows="2" maxlength="1000" placeholder="Qo'shimcha istaklar"></textarea></div>
+          <div class="field"><label for="coComment">Izoh (ixtiyoriy)</label><textarea class="input" id="coComment" name="comment" rows="2" maxlength="1000" placeholder="Qo'shimcha istaklar"></textarea></div>
         </div>
 
         <div class="panel">
@@ -462,17 +465,17 @@ function renderCheckout() {
             <div class="bank">${esc(st.cardBank)} · ${esc(st.shopName)}</div>
             <div class="num">${esc(st.cardNumber)}</div>
             <div class="holder">${esc(st.cardHolder)}</div>
-            <div class="copy-row"><button type="button" class="btn btn-sm" id="cpCard">📋 Karta raqamini nusxalash</button></div>
+            <div class="copy-row"><button type="button" class="btn btn-sm" id="cpCard">${I('copy')} Karta raqamini nusxalash</button></div>
           </div>
           <div class="amount-box"><span class="muted">To'lanadigan summa:</span><b id="payAmount"></b>
-            <button type="button" class="btn btn-sm" id="cpAmount">📋 Nusxalash</button></div>
+            <button type="button" class="btn btn-sm" id="cpAmount">${I('copy')} Nusxalash</button></div>
           <p class="muted" style="font-size:14px;margin-top:0">${esc(st.paymentNote)}</p>
           <label class="upload" id="upBox">
             <input type="file" accept="image/*" id="receiptInput">
-            <div id="upText">📎 <b>To'lov chekini yuklang</b> <span class="req">*</span><br><span class="hint">Click / Payme / bank ilovasidan skrinshot</span></div>
+            <div id="upText">${T('clip', 'indigo', 'lg')}<br><b>To'lov chekini yuklang</b> <span class="req">*</span><br><span class="hint">Click / Payme / bank ilovasidan skrinshot</span></div>
           </label>
           <label class="check"><input type="checkbox" id="agree"> <span>Ko'rsatilgan summani kartaga o'tkazdim va ma'lumotlarim to'g'riligini tasdiqlayman</span></label>
-          <div class="err" id="formErr"></div>
+          <div class="err" id="formErr" role="alert"></div>
         </div>
       </div>
 
@@ -480,7 +483,7 @@ function renderCheckout() {
         <h3>Buyurtmangiz</h3>
         <div id="coLines"></div>
         <div id="coSum"></div>
-        <button class="btn btn-primary btn-block btn-lg" id="submitBtn" style="margin-top:16px">✅ Buyurtma berish</button>
+        <button class="btn btn-primary btn-block btn-lg" id="submitBtn" style="margin-top:16px">${I('check')} Buyurtma berish</button>
         <p class="hint" style="text-align:center;margin-bottom:0">Buyurtma berilgach operator siz bilan bog'lanadi</p>
       </aside>
     </form>`;
@@ -507,7 +510,7 @@ function renderCheckout() {
     try {
       receipt = await compressImage(f);
       $('#upBox').classList.add('has');
-      $('#upText').innerHTML = `✅ <b>Chek yuklandi</b> <span class="hint">(almashtirish uchun bosing)</span><img src="${receipt}" alt="Chek">`;
+      $('#upText').innerHTML = `${T('check', 'green', 'sm')} <b>Chek yuklandi</b> <span class="hint">(almashtirish uchun bosing)</span><img src="${receipt}" alt="Chek">`;
     } catch (err) { toast(err.message, true); }
   };
 
@@ -515,8 +518,8 @@ function renderCheckout() {
     e.preventDefault();
     const errEl = $('#formErr');
     errEl.textContent = '';
-    $$('.invalid', form).forEach((x) => x.classList.remove('invalid'));
-    const bad = (el, msg) => { if (el) { el.classList.add('invalid'); el.focus(); } errEl.textContent = msg; toast(msg, true); };
+    $$('.invalid', form).forEach((x) => { x.classList.remove('invalid'); x.removeAttribute('aria-invalid'); });
+    const bad = (el, msg) => { if (el) { el.classList.add('invalid'); el.setAttribute('aria-invalid', 'true'); el.focus(); } errEl.textContent = msg; toast(msg, true); };
     const name = form.name.value.trim();
     if (name.length < 2) return bad(form.name, 'Ismingizni kiriting');
     const phone = normPhone(form.phone.value);
@@ -546,7 +549,7 @@ function renderCheckout() {
       loadShop(); // ombor qoldiqlarini yangilash
     } catch (err) {
       errEl.textContent = err.message; toast(err.message, true);
-      btn.disabled = false; btn.textContent = '✅ Buyurtma berish';
+      btn.disabled = false; btn.innerHTML = `${I('check')} Buyurtma berish`;
     }
   };
 }
@@ -557,7 +560,7 @@ function renderSuccess(number) {
   const st = S.settings;
   app.innerHTML = `
     <div class="success panel">
-      <div class="big">🎉</div>
+      <div class="big">${T('check', 'green', 'xl')}</div>
       <h1>Rahmat! Buyurtmangiz qabul qilindi</h1>
       <div class="order-no">#${esc(number)}</div>
       ${String(last.number) === String(number) ? `<p>To'langan summa: <b>${money(last.total)}</b></p>` : ''}
@@ -575,14 +578,14 @@ function renderBuild() {
   const st = S.settings;
   const chosen = {};
   app.innerHTML = `
-    <h1>🛠️ PC konfigurator</h1>
+    <h1 class="title-ico">${T('wrench', 'blue', 'sm')} PC konfigurator</h1>
     <p class="muted" style="margin-top:6px">Har bir bo'limdan kerakli qismni tanlang. Biz yig'ib, sinovdan o'tkazib, Windows o'rnatib beramiz.</p>
     <div class="layout-2 build-layout" style="margin-top:18px">
       <div class="panel">
         ${parts.map((c) => {
           const list = S.products.filter((p) => p.categoryId === c.id && (p.stock == null || p.stock > 0));
           return `<div class="build-row">
-            <div class="ico">${esc(c.icon)}</div><b>${esc(c.name)}</b>
+            <div class="ico">${Icons.catTile(c, 'sm')}</div><b>${esc(c.name)}</b>
             <select class="input" data-part="${c.id}" ${list.length ? '' : 'disabled'}>
               <option value="">${list.length ? '— Tanlang —' : "Hozircha mavjud emas"}</option>
               ${list.map((p) => `<option value="${p.id}">${esc(p.name)} — ${money(p.price)}</option>`).join('')}
@@ -594,7 +597,7 @@ function renderBuild() {
         <h3>Sizning yig'ma</h3>
         <div class="build-3d" id="build3d"><span class="drag-hint">Tanlangan qismlar korpusga o'rnatiladi</span></div>
         <div id="bSum"></div>
-        <button class="btn btn-primary btn-block btn-lg" id="bAdd" style="margin-top:16px" disabled>🛒 Savatga qo'shish</button>
+        <button class="btn btn-primary btn-block btn-lg" id="bAdd" style="margin-top:16px" disabled>${I('cart')} Savatga qo'shish</button>
         <p class="hint" style="margin-bottom:0">Moslik bo'yicha savollar bo'lsa, operatorimiz buyurtmadan keyin maslahat beradi.</p>
       </aside>
     </div>`;
@@ -632,11 +635,11 @@ function renderTrack(params) {
   const number = params.get('number') || last.number || '';
   app.innerHTML = `
     <div style="max-width:640px;margin:0 auto">
-      <h1 style="margin-bottom:18px">📦 Buyurtma holati</h1>
+      <h1 class="title-ico" style="margin-bottom:18px">${T('box', 'orange', 'sm')} Buyurtma holati</h1>
       <form class="panel" id="trForm">
         <div class="row">
-          <div class="field"><label>Buyurtma raqami</label><input class="input" name="number" inputmode="numeric" placeholder="1001" value="${esc(number)}"></div>
-          <div class="field"><label>Telefon raqam</label><div class="phone-wrap"><span>+998</span><input class="input" name="phone" inputmode="numeric" placeholder="90 123 45 67" value="${esc(String(last.number) === String(number) ? last.phone : '')}"></div></div>
+          <div class="field"><label for="trNumber">Buyurtma raqami</label><input class="input" id="trNumber" name="number" inputmode="numeric" placeholder="1001" value="${esc(number)}"></div>
+          <div class="field"><label for="trPhone">Telefon raqam</label><div class="phone-wrap"><span aria-hidden="true">+998</span><input class="input" id="trPhone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="90 123 45 67" value="${esc(String(last.number) === String(number) ? last.phone : '')}"></div></div>
         </div>
         <button class="btn btn-primary btn-block">Tekshirish</button>
       </form>
@@ -655,7 +658,7 @@ function renderTrack(params) {
       box.innerHTML = `<div class="panel">
         <h3>Buyurtma #${d.number}</h3>
         <p class="muted" style="margin-top:-8px">${new Date(d.createdAt).toLocaleString('uz-UZ')}</p>
-        ${d.status === 'cancelled' ? '<div class="notice">❌ Buyurtma bekor qilingan. Savollar bo\'lsa biz bilan bog\'laning.</div>'
+        ${d.status === 'cancelled' ? '<div class="notice">' + I('xCircle') + ' Buyurtma bekor qilingan. Savollar bo\'lsa biz bilan bog\'laning.</div>'
           : `<div class="timeline">${statusList.map((s, i) => `<div class="${i <= idx ? 'on' : ''}">${s[1]}</div>`).join('')}</div>`}
         ${d.items.map((i) => `<div class="sum-row"><span>${esc(i.name)} × ${i.qty}</span><span>${money(i.price * i.qty)}</span></div>`).join('')}
         ${d.extras.map((x) => `<div class="sum-row"><span>${esc(x.name)}</span><span>${money(x.price)}</span></div>`).join('')}
@@ -680,7 +683,7 @@ const revealObserver = 'IntersectionObserver' in window
   }), { rootMargin: '0px 0px -40px 0px' })
   : null;
 function revealOnScroll() {
-  $$('.hero, .perk, .section-head, .card, .cat, .step, .banner, .panel, .gallery-main').forEach((el) => {
+  $$('.grid .card, .rail .card, .cat, .step').forEach((el) => {
     const i = [...el.parentElement.children].indexOf(el);
     el.style.setProperty('--d', Math.min(i, 8) * 0.06 + 's');
     el.classList.add('reveal');
@@ -710,6 +713,14 @@ if (matchMedia('(hover: hover) and (pointer: fine)').matches && !matchMedia('(pr
     el.style.setProperty('--my', (y * 100).toFixed(1) + '%');
   });
 }
+
+// Gorizontal qatorlarni tugmalar bilan aylantirish
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-rail-prev], [data-rail-next]');
+  if (!b) return;
+  const rail = b.closest('.section').querySelector('.rail');
+  rail.scrollBy({ left: ('railNext' in b.dataset ? 1 : -1) * rail.clientWidth * 0.85, behavior: 'smooth' });
+});
 
 // Kursor ortidan yuruvchi yumshoq qizil nur
 if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
@@ -752,13 +763,13 @@ function fillLayout() {
   const st = S.settings;
   const tel = 'tel:' + String(st.phone).replace(/[^\d+]/g, '');
   document.title = `${st.shopName} — ${st.tagline}`;
-  $('#tb-address').textContent = '📍 ' + st.address;
-  $('#tb-hours').textContent = '🕘 ' + st.workHours;
-  $('#tb-phone').textContent = '📞 ' + st.phone; $('#tb-phone').href = tel;
+  $('#tb-address').innerHTML = I('pin') + ' ' + esc(st.address);
+  $('#tb-hours').innerHTML = I('clock') + ' ' + esc(st.workHours);
+  $('#tb-phone').innerHTML = I('phone') + ' ' + esc(st.phone); $('#tb-phone').href = tel;
   $('#ft-tagline').textContent = st.tagline;
-  $('#ft-phone').textContent = '📞 ' + st.phone; $('#ft-phone').href = tel;
-  $('#ft-address').textContent = '📍 ' + st.address;
-  $('#ft-hours').textContent = '🕘 ' + st.workHours;
+  $('#ft-phone').innerHTML = I('phone') + ' ' + esc(st.phone); $('#ft-phone').href = tel;
+  $('#ft-address').innerHTML = I('pin') + ' ' + esc(st.address);
+  $('#ft-hours').innerHTML = I('clock') + ' ' + esc(st.workHours);
   $('#ft-tg').href = st.telegram || '#'; $('#ft-tg').hidden = !st.telegram;
   $('#ft-ig').href = st.instagram || '#'; $('#ft-ig').hidden = !st.instagram;
   $('#ft-copy').textContent = `© ${new Date().getFullYear()} ${st.shopName}. Barcha huquqlar himoyalangan.`;
@@ -774,7 +785,8 @@ document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-add]');
   if (b) { e.preventDefault(); addToCart(b.dataset.add, 1, false, b); }
 });
-$('#menuBtn').onclick = () => $('#nav').classList.toggle('open');
+$('#menuBtn').onclick = () => $('#menuBtn').setAttribute('aria-expanded', $('#nav').classList.toggle('open'));
+$('#nav').addEventListener('click', (e) => { if (e.target.closest('a')) { $('#nav').classList.remove('open'); $('#menuBtn').setAttribute('aria-expanded', 'false'); } });
 $('#searchForm').onsubmit = (e) => {
   e.preventDefault();
   const q = $('#searchInput').value.trim();
@@ -783,6 +795,6 @@ $('#searchForm').onsubmit = (e) => {
 window.addEventListener('hashchange', route);
 
 loadShop().then(() => { fillLayout(); route(); }).catch(() => {
-  app.innerHTML = `<div class="empty"><div class="big">⚠️</div><p>Serverga ulanib bo'lmadi. Sahifani yangilang.</p></div>`;
+  app.innerHTML = `<div class="empty"><div class="big">${T('alert', 'orange', 'xl')}</div><p>Serverga ulanib bo'lmadi. Sahifani yangilang.</p></div>`;
 });
 updateCartBadge();
